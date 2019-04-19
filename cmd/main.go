@@ -1,0 +1,118 @@
+package main
+
+import (
+	"os"
+	"strings"
+
+	"github.com/AliyunContainerService/kube2ram/ram"
+
+	log "github.com/sirupsen/logrus"
+	"github.com/spf13/pflag"
+
+	"github.com/AliyunContainerService/kube2ram/server"
+	"github.com/AliyunContainerService/kube2ram/version"
+)
+
+// addFlags adds the command line flags.
+func addFlags(s *server.Server, fs *pflag.FlagSet) {
+	fs.StringVar(&s.APIServer, "api-server", s.APIServer, "Endpoint for the api server")
+	fs.StringVar(&s.APIToken, "api-token", s.APIToken, "Token to authenticate with the api server")
+	fs.StringVar(&s.AppPort, "app-port", s.AppPort, "kube2ram server http port")
+	fs.StringVar(&s.MetricsPort, "metrics-port", s.MetricsPort, "Metrics server http port (default: same as kube2ram server port)")
+	fs.StringVar(&s.BaseRoleARN, "base-role-arn", s.BaseRoleARN, "Base role ARN")
+	fs.BoolVar(&s.Debug, "debug", s.Debug, "Enable debug features")
+	fs.StringVar(&s.DefaultRAMRole, "default-role", s.DefaultRAMRole, "Fallback role to use when annotation is not set")
+	fs.StringVar(&s.RAMRoleKey, "ram-role-key", s.RAMRoleKey, "Pod annotation key used to retrieve the RAM role")
+	fs.DurationVar(&s.RAMRoleSessionTTL, "ram-role-session-ttl", s.RAMRoleSessionTTL, "TTL for the assume role session")
+	fs.BoolVar(&s.Insecure, "insecure", false, "Kubernetes server should be accessed without verifying the TLS. Testing only")
+	fs.StringVar(&s.MetadataAddress, "metadata-addr", s.MetadataAddress, "Address for the ECS metadata")
+	fs.BoolVar(&s.AddIPTablesRule, "iptables", false, "Add iptables rule (also requires --host-ip)")
+	fs.BoolVar(&s.AutoDiscoverBaseArn, "auto-discover-base-arn", false, "Queries ECS Metadata to determine the base ARN")
+	fs.BoolVar(&s.AutoDiscoverDefaultRole, "auto-discover-default-role", false, "Queries ECS Metadata to determine the default RAM Role and base ARN, cannot be used with --default-role, overwrites any previous setting for --base-role-arn")
+	fs.StringVar(&s.HostInterface, "host-interface", "docker0", "Host interface for proxying Alibaba Cloud metadata")
+	fs.BoolVar(&s.NamespaceRestriction, "namespace-restrictions", false, "Enable namespace restrictions")
+	fs.StringVar(&s.NamespaceRestrictionFormat, "namespace-restriction-format", s.NamespaceRestrictionFormat, "Namespace Restriction Format (glob/regexp)")
+	fs.StringVar(&s.NamespaceKey, "namespace-key", s.NamespaceKey, "Namespace annotation key used to retrieve the RAM roles allowed (value in annotation should be json array)")
+	fs.StringVar(&s.HostIP, "host-ip", s.HostIP, "IP address of host")
+	fs.StringVar(&s.NodeName, "node", s.NodeName, "Name of the node where kube2ram is running")
+	fs.DurationVar(&s.BackoffMaxInterval, "backoff-max-interval", s.BackoffMaxInterval, "Max interval for backoff when querying for role.")
+	fs.DurationVar(&s.BackoffMaxElapsedTime, "backoff-max-elapsed-time", s.BackoffMaxElapsedTime, "Max elapsed time for backoff when querying for role.")
+	fs.StringVar(&s.LogFormat, "log-format", s.LogFormat, "Log format (text/json)")
+	fs.StringVar(&s.LogLevel, "log-level", s.LogLevel, "Log level")
+	fs.BoolVar(&s.UseRegionalStsEndpoint, "use-regional-sts-endpoint", true, "use the regional sts endpoint if REGION_ID is set")
+	fs.BoolVar(&s.Verbose, "verbose", false, "Verbose")
+	fs.BoolVar(&s.Version, "version", false, "Print the version and exits")
+}
+
+func main() {
+	s := server.NewServer()
+	addFlags(s, pflag.CommandLine)
+	pflag.Parse()
+
+	logLevel, err := log.ParseLevel(s.LogLevel)
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
+
+	if s.Verbose {
+		log.SetLevel(log.DebugLevel)
+	} else {
+		log.SetLevel(logLevel)
+	}
+
+	if strings.ToLower(s.LogFormat) == "json" {
+		log.SetFormatter(&log.JSONFormatter{})
+	}
+
+	if s.Version {
+		version.PrintVersionAndExit()
+	}
+
+	if s.BaseRoleARN != "" {
+		if !ram.IsValidBaseARN(s.BaseRoleARN) {
+			log.Fatalf("Invalid --base-role-arn specified, expected: %s", ram.ARNRegexp.String())
+		}
+		if !strings.HasSuffix(s.BaseRoleARN, "/") {
+			s.BaseRoleARN += "/"
+		}
+	}
+
+	if s.AutoDiscoverBaseArn {
+		if s.BaseRoleARN != "" {
+			log.Fatal("--auto-discover-base-arn cannot be used if --base-role-arn is specified")
+		}
+		arn, err := ram.GetBaseArn()
+		if err != nil {
+			log.Fatalf("%s", err)
+		}
+		log.Infof("base ARN autodetected, %s", arn)
+		s.BaseRoleARN = arn
+	}
+
+	if s.AutoDiscoverDefaultRole {
+		if s.DefaultRAMRole != "" {
+			log.Fatalf("You cannot use --default-role and --auto-discover-default-role at the same time")
+		}
+		arn, err := ram.GetBaseArn()
+		if err != nil {
+			log.Fatalf("%s", err)
+		}
+		s.BaseRoleARN = arn
+		instanceRAMRole, err := ram.GetInstanceRAMRole()
+		if err != nil {
+			log.Fatalf("%s", err)
+		}
+		s.DefaultRAMRole = instanceRAMRole
+		log.Infof("Using instance RAMRole %s%s as default", s.BaseRoleARN, s.DefaultRAMRole)
+	}
+
+	accessKey := os.Getenv("ACCESS_KEY_ID")
+	accessSecret := os.Getenv("ACCESS_KEY_SECRET")
+	if accessKey == "" || accessSecret == "" {
+		log.Infof("Using the assume mode ")
+	}
+
+	if err := s.Run(s.APIServer, s.APIToken, s.NodeName, s.Insecure, accessKey, accessSecret); err != nil {
+		log.Fatalf("%s", err)
+	}
+}

@@ -1,0 +1,31 @@
+package: github.com/AliyunContainerService/kube2ram
+import:
+- package: github.com/denverdino/aliyungo
+  version: d63bb8a98464b4827854046afb30db95b3efea3d
+- package: github.com/aliyun/alibaba-cloud-sdk-go
+  version: 1.51.22
+- package: github.com/gorilla/mux
+- package: github.com/karlseguin/ccache
+- package: github.com/spf13/pflag
+- package: k8s.io/apimachinery
+- package: k8s.io/client-go
+  version: v2.0.0
+  subpackages:
+  - pkg/api/v1
+  - kubernetes
+  - pkg/fields
+  - rest
+- package: github.com/cenk/backoff
+- package: github.com/coreos/go-iptables
+  version: v0.1.0
+  subpackages:
+  - iptables
+- package: github.com/sirupsen/logrus
+  version: ^1.0.2
+- package: github.com/ryanuber/go-glob
+- package: github.com/prometheus/client_golang
+  version: v0.9.0-pre1
+  subpackages:
+  - prometheus/promhttp
+- package: github.com/satori/go.uuid
+  version: 1.1.0

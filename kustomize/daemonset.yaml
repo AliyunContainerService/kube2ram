@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app.kubernetes.io/name: kube2ram
+  name: kube2ram
+  namespace: kube-system
+spec:
+  selector:
+   matchLabels:
+    app.kubernetes.io/name: kube2ram
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: kube2ram
+    spec:
+      containers:
+      - name: kube2ram
+        image: registry.cn-hangzhou.aliyuncs.com/acs/kube2ram:1.0.0
+        imagePullPolicy: Always
+        args:
+          - "--app-port=8181"
+          - "--iptables=true"
+          - "--host-ip=$(HOST_IP)"
+          - "--host-interface=cni0"
+          - "--verbose"
+          - "--auto-discover-default-role"
+        env:
+        - name: HOST_IP
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: status.podIP
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: spec.nodeName
+        ports:
+        - containerPort: 8181
+          protocol: TCP
+        securityContext:
+          privileged: true
+      hostNetwork: true
+      serviceAccountName: kube2ram
