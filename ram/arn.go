@@ -2,9 +2,10 @@ package ram
 
 import (
 	"fmt"
-	log "github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/denverdino/aliyungo/metadata"
 )

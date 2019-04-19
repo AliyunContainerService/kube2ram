@@ -149,12 +149,12 @@ func (r *RoleMapper) DumpDebugInfo() map[string]interface{} {
 // NewRoleMapper returns a new RoleMapper for use.
 func NewRoleMapper(roleKey string, defaultRole string, namespaceRestriction bool, namespaceKey string, ramInstance *ram.Client, kubeStore store, namespaceRestrictionFormat string) *RoleMapper {
 	return &RoleMapper{
-		defaultRoleARN:       ramInstance.RoleARN(defaultRole),
-		ramRoleKey:           roleKey,
-		namespaceKey:         namespaceKey,
-		namespaceRestriction: namespaceRestriction,
-		ram:                  ramInstance,
-		store:                kubeStore,
+		defaultRoleARN:             ramInstance.RoleARN(defaultRole),
+		ramRoleKey:                 roleKey,
+		namespaceKey:               namespaceKey,
+		namespaceRestriction:       namespaceRestriction,
+		ram:                        ramInstance,
+		store:                      kubeStore,
 		namespaceRestrictionFormat: namespaceRestrictionFormat,
 	}
 }

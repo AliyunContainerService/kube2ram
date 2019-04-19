@@ -23,7 +23,7 @@ Call the metadata server http://100.100.100.200/latest/meta-data/ram/security-cr
 {
   "Version": "1",
   "Statement": [
-    ...//omit the granted policies here
+    .../*omit the granted policies here*/
     {
       "Action": [
         "sts:AssumeRole"
