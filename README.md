@@ -34,7 +34,6 @@ Call the metadata server http://100.100.100.200/latest/meta-data/ram/security-cr
   ]
 }
 ```
-use your Alibaba Cloud account uid in `acs:ram::xxxxxxx:root`
 
 also you need to find all of the target assumeroles, and make sure the account uid exists in trust `Principal` as below: 
 

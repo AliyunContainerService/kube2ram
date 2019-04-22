@@ -31,7 +31,6 @@ kube2ram正是基于此问题提出的解决方案，它可以以daemonset的形
   ]
 }
 ```
-其中`acs:ram::xxxxxxx:root`中需要填写主账号uid
 
 同时找到需要assume的RAM角色，确认角色的可信主体策略中包含了KubernetesWorkerRole所在的账号主体：
 ```json
