@@ -11,7 +11,7 @@ GOBUILD_VERSION_ARGS := -ldflags "-s -X $(VERSION_VAR)=$(REPO_VERSION) -X $(GIT_
 # useful for other docker repos
 DOCKER_REPO ?= registry.cn-hangzhou.aliyuncs.com/acs
 IMAGE_NAME := $(DOCKER_REPO)/$(BINARY_NAME)
-ARCH ?= darwin
+ARCH ?= linux
 METALINTER_CONCURRENCY ?= 4
 METALINTER_DEADLINE ?= 180
 # useful for passing --build-arg http_proxy :)
@@ -27,13 +27,13 @@ setup:
 	glide install --strip-vendor
 
 build: *.go fmt
-	go build -o build/bin/$(ARCH)/$(BINARY_NAME) $(GOBUILD_VERSION_ARGS) github.com/AliyunContainerService/$(BINARY_NAME)/cmd
+	CGO_ENABLED=0 go build -o build/bin/$(ARCH)/$(BINARY_NAME) $(GOBUILD_VERSION_ARGS) github.com/AliyunContainerService/$(BINARY_NAME)/cmd
 
 build-race: *.go fmt
-	go build -race -o build/bin/$(ARCH)/$(BINARY_NAME) $(GOBUILD_VERSION_ARGS) github.com/AliyunContainerService/$(BINARY_NAME)/cmd
+	CGO_ENABLED=0 go build -race -o build/bin/$(ARCH)/$(BINARY_NAME) $(GOBUILD_VERSION_ARGS) github.com/AliyunContainerService/$(BINARY_NAME)/cmd
 
 build-all:
-	go build $$(glide nv)
+	CGO_ENABLED=0 go build $$(glide nv)
 
 fmt:
 	gofmt -w=true -s $$(find . -type f -name '*.go' -not -path "./vendor/*")
