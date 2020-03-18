@@ -386,8 +386,8 @@ func (s *Server) Run(host, token, nodeName string, insecure bool, accessKey, acc
 		// This is a potential security risk if enabled in some clusters, hence the flag
 		r.Handle("/debug/store", newAppHandler("debugStoreHandler", s.debugStoreHandler))
 	}
-	r.Handle("/{version}/meta-data/ram/security-credentials", securityHandler)
-	r.Handle("/{version}/meta-data/ram/security-credentials/", securityHandler)
+	r.Handle("/{version}/meta-data/{ram:(ram|Ram)}/security-credentials", securityHandler)
+	r.Handle("/{version}/meta-data/{ram:(ram|Ram)}/security-credentials/", securityHandler)
 	r.Handle(
 		"/{version}/meta-data/ram/security-credentials/{role:.*}",
 		newAppHandler("roleHandler", s.roleHandler))
