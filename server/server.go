@@ -389,7 +389,7 @@ func (s *Server) Run(host, token, nodeName string, insecure bool, accessKey, acc
 	r.Handle("/{version}/meta-data/{ram:(ram|Ram)}/security-credentials", securityHandler)
 	r.Handle("/{version}/meta-data/{ram:(ram|Ram)}/security-credentials/", securityHandler)
 	r.Handle(
-		"/{version}/meta-data/ram/security-credentials/{role:.*}",
+		"/{version}/meta-data/{ram:(ram|Ram)}/security-credentials/{role:.*}",
 		newAppHandler("roleHandler", s.roleHandler))
 	r.Handle("/healthz", newAppHandler("healthHandler", s.healthHandler))
 
