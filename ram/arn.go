@@ -28,10 +28,6 @@ func (ram *Client) RoleARN(role string) string {
 	if strings.HasPrefix(strings.ToLower(role), fullArnPrefix) {
 		return role
 	}
-	//return if the wantedRole is the ecs ram role
-	if strings.HasSuffix(ram.BaseARN, strings.ToLower(role)) {
-		return role
-	}
 
 	prefixRole := strings.Split(ram.BaseARN, "/")[0]
 	return fmt.Sprintf("%s/%s", prefixRole, role)

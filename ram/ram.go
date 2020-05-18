@@ -161,6 +161,7 @@ func (ram *Client) AssumeRole(roleARN, remoteIP string, sessionTTL time.Duration
 			}
 		}
 
+		log.Infof("assume role arn is %s", roleARN)
 		request := sts.CreateAssumeRoleRequest()
 		request.Scheme = "https"
 		request.RoleArn = roleARN
